@@ -31,6 +31,17 @@ jobs:
     timeout-minutes: 20
 
     steps:
+      - name: 检查必填 Secrets
+        run: |
+          set -e
+          check() { if [ -z "$1" ]; then echo "::error title=缺少 Secret::$2 未配置，请到 Settings → Secrets → Actions 添加"; exit 1; fi; }
+          check "${{ secrets.SSH_HOST }}" "SSH_HOST"
+          check "${{ secrets.SSH_USER }}" "SSH_USER"
+          check "${{ secrets.SSH_PRIVATE_KEY }}" "SSH_PRIVATE_KEY"
+          check "${{ secrets.BOT_TOKEN }}" "BOT_TOKEN"
+          check "${{ secrets.WEB_TOKEN }}" "WEB_TOKEN"
+          echo "必填 Secrets 已配置"
+
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.2.0
         env:
@@ -70,5 +81,13 @@ jobs:
             PAYMENT_ADDRESS,HIBP_API_KEY,BANK_VERIFY_APPCODE,TRONGRID_API_KEY,
             PORT,WEB_PORT,BOT_BASE_URL,WEB_BASE_URL
           script: |
+            set -euxo pipefail
             export DEPLOY_PATH="${DEPLOY_PATH:-/opt/bot}"
+            mkdir -p "${DEPLOY_PATH}"
+            if [ ! -d "${DEPLOY_PATH}/.git" ]; then
+              git clone https://github.com/ziziw335/PyCharmMiscProject.git "${DEPLOY_PATH}"
+            fi
+            cd "${DEPLOY_PATH}"
+            git fetch origin
+            git reset --hard origin/main
             bash scripts/ci-deploy.sh
