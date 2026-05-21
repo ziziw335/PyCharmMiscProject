@@ -1,0 +1,9 @@
+# See https://pre-commit.com for more information
+default_install_hook_types: [pre-commit, commit-msg]
+
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.24.2
+    hooks:
+      - id: gitleaks
+        args: [--config, gitleaks.toml]

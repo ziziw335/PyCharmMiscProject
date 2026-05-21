@@ -1,0 +1,14 @@
+.git
+.github
+.venv
+.idea
+__pycache__
+*.pyc
+.env
+.env.*
+!.env.example
+data/
+logs/
+bin/gitleaks
+*.md
+.DS_Store

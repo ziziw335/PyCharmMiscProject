@@ -1,0 +1,20 @@
+本机开发 + 公网账单页（ngrok）— 简要步骤
+========================================
+
+完整功能说明见：如何使用.md
+
+① PyCharm 运行「运行 Web后台」(web.py)  — 端口 8081
+② PyCharm 运行「运行 Bot」(app.py)
+③ 终端执行（二选一）:
+   ./start_ngrok.sh
+   或: ngrok http 8081
+
+   ⚠️ 不要用 ngrok http 80
+
+④ Bot 日志应出现公网地址（若配置了 PUBLIC_WEB_BASE_URL）
+
+⑤ 浏览器打开 Web 后台:
+   http://127.0.0.1:8081
+   密码 = .env 里的 WEB_TOKEN
+
+生产环境（7×24）请用 VPS + deploy_to_vps.sh，见 如何使用.md 第九节。

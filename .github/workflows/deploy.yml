@@ -1,0 +1,73 @@
+# 生产部署：push 到 main/master → SSH 写入 .env → git pull → docker compose 重建
+#
+# 在 GitHub 仓库 Settings → Secrets and variables → Actions 中配置：
+#   SSH_HOST          服务器 IP 或域名
+#   SSH_USER          SSH 用户名（如 root）
+#   SSH_PRIVATE_KEY   私钥全文（PEM，含 BEGIN/END 行）
+#   SSH_PORT          可选，默认 22
+#   DEPLOY_PATH       可选，服务器上的项目目录，默认 /opt/bot
+#   GIT_DEPLOY_TOKEN  可选，私有仓库 HTTPS pull 用的 PAT（无则依赖服务器已有 git 凭据）
+#
+#   BOT_TOKEN, WEB_TOKEN, DATABASE_PASSWORD, API_TOKEN, DATABASE_URL, …
+#   （与 scripts/ci-write-env.sh 中列出的变量名一致，按需添加）
+
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: SSH deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          GIT_DEPLOY_TOKEN: ${{ secrets.GIT_DEPLOY_TOKEN }}
+          # —— 写入服务器 .env 的密钥（在 GitHub Secrets 中配置）——
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          WEB_TOKEN: ${{ secrets.WEB_TOKEN }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          API_TOKEN: ${{ secrets.API_TOKEN }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          PGSSLMODE: ${{ secrets.PGSSLMODE }}
+          BOT_OWNER_ID: ${{ secrets.BOT_OWNER_ID }}
+          SUPER_ADMIN_ID: ${{ secrets.SUPER_ADMIN_ID }}
+          TELEGRAM_SECRET_TOKEN: ${{ secrets.TELEGRAM_SECRET_TOKEN }}
+          GROUP_VIEW_SECRET: ${{ secrets.GROUP_VIEW_SECRET }}
+          PUBLIC_WEB_BASE_URL: ${{ secrets.PUBLIC_WEB_BASE_URL }}
+          PAYMENT_ADDRESS: ${{ secrets.PAYMENT_ADDRESS }}
+          HIBP_API_KEY: ${{ secrets.HIBP_API_KEY }}
+          BANK_VERIFY_APPCODE: ${{ secrets.BANK_VERIFY_APPCODE }}
+          TRONGRID_API_KEY: ${{ secrets.TRONGRID_API_KEY }}
+          PORT: ${{ secrets.PORT }}
+          WEB_PORT: ${{ secrets.WEB_PORT }}
+          BOT_BASE_URL: ${{ secrets.BOT_BASE_URL }}
+          WEB_BASE_URL: ${{ secrets.WEB_BASE_URL }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT != '' && secrets.SSH_PORT || '22' }}
+          command_timeout: 15m
+          envs: >-
+            DEPLOY_PATH,GIT_DEPLOY_TOKEN,
+            BOT_TOKEN,WEB_TOKEN,DATABASE_PASSWORD,API_TOKEN,
+            DATABASE_URL,PGSSLMODE,BOT_OWNER_ID,SUPER_ADMIN_ID,
+            TELEGRAM_SECRET_TOKEN,GROUP_VIEW_SECRET,PUBLIC_WEB_BASE_URL,
+            PAYMENT_ADDRESS,HIBP_API_KEY,BANK_VERIFY_APPCODE,TRONGRID_API_KEY,
+            PORT,WEB_PORT,BOT_BASE_URL,WEB_BASE_URL
+          script: |
+            export DEPLOY_PATH="${DEPLOY_PATH:-/opt/bot}"
+            bash scripts/ci-deploy.sh

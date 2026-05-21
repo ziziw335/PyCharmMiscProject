@@ -1,0 +1,25 @@
+# 生产环境：在服务器项目目录执行 docker compose up -d --build
+services:
+  bot:
+    build: .
+    container_name: telegram-bot
+    command: ["python", "app.py"]
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+
+  web:
+    build: .
+    container_name: telegram-web
+    command: ["python", "web.py"]
+    env_file:
+      - .env
+    ports:
+      - "${WEB_PORT:-8081}:8081"
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    depends_on:
+      - bot

@@ -1,0 +1,65 @@
+name: Gitleaks Secret Scan
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gitleaks-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gitleaks:
+    name: Scan for secrets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Gitleaks
+        env:
+          GITLEAKS_VERSION: "8.24.2"
+        run: |
+          curl -sSL \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            | tar -xz gitleaks
+          sudo install -m 755 gitleaks /usr/local/bin/gitleaks
+          gitleaks version
+
+      # push：全量扫描当前仓库
+      - name: Gitleaks full scan (push)
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: |
+          gitleaks detect \
+            --source . \
+            --config gitleaks.toml \
+            --verbose \
+            --redact
+        # 发现密钥时 gitleaks 以非 0 退出，本 step 失败 → 阻断 CI
+
+      # PR：先扫增量 diff，再全量扫一遍（双保险）
+      - name: Gitleaks incremental scan (pull_request)
+        if: github.event_name == 'pull_request'
+        run: |
+          gitleaks detect \
+            --source . \
+            --config gitleaks.toml \
+            --verbose \
+            --redact \
+            --log-opts="${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}"
+
+      - name: Gitleaks full scan (pull_request)
+        if: github.event_name == 'pull_request'
+        run: |
+          gitleaks detect \
+            --source . \
+            --config gitleaks.toml \
+            --verbose \
+            --redact

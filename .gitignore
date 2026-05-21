@@ -1,0 +1,20 @@
+# ========== 密钥与本地环境（切勿提交）==========
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# ========== 运行时数据 ==========
+data/
+
+# ========== Python ==========
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.Python
+
+# ========== 工具 / IDE ==========
+bin/gitleaks
+.DS_Store
+.idea/

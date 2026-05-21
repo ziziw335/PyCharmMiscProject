@@ -1,0 +1,14 @@
+PyCharm 运行（2 步）
+==================
+
+1. 关掉「编辑配置」窗口
+2. 右上角选「运行 Bot」或「运行 Web后台」→ 点绿色 ▶
+
+解释器：.venv/bin/python（已配置）
+
+必读：如何使用.md
+  - 全部功能版块（记账 / 管理 / 查询工具 / Web 后台）
+  - 命令大全与 .env 配置
+  - VPS 部署方法
+
+若报错：File → Invalidate Caches → Clear file system cache → Restart

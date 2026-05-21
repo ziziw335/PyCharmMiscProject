@@ -1,0 +1,40 @@
+# 项目级 Gitleaks 配置：继承官方默认规则，并放宽测试/示例路径
+# 文档: https://github.com/gitleaks/gitleaks#configuration
+
+title = "PyCharmMiscProject"
+
+[extend]
+# 保留官方全部检测规则，仅追加本文件的 allowlist
+useDefault = true
+
+[allowlist]
+description = "测试目录、测试文件命名、示例配置与本地环境（降低误报）"
+paths = [
+    # 测试目录
+    '''(?:^|/)tests?(?:/|$)''',
+    '''(?:^|/)__tests__(?:/|$)''',
+    '''(?:^|/)testing(?:/|$)''',
+    '''(?:^|/)fixtures?(?:/|$)''',
+    '''(?:^|/)testdata(?:/|$)''',
+    '''(?:^|/)mock(?:s)?(?:/|$)''',
+    '''(?:^|/)e2e(?:/|$)''',
+    '''(?:^|/)spec(?:/|$)''',
+    # 测试文件命名（Python / 通用）
+    '''(?i)(?:^|/).*_test\.(?:py|go|js|ts|tsx|java|rb)$''',
+    '''(?i)(?:^|/)test_[^/]+\.(?:py|go|js|ts|tsx|java|rb)$''',
+    '''(?i)(?:^|/)[^/]*\.test\.(?:py|go|js|ts|tsx)$''',
+    '''(?i)(?:^|/)[^/]*\.spec\.(?:py|go|js|ts|tsx)$''',
+    '''(?:^|/)conftest\.py$''',
+    # 本地环境文件（切勿提交 .env）
+    '''(?:^|/)\.env$''',
+    # 示例/模板（非真实密钥）
+    '''(?:^|/)\.env\.example$''',
+    '''(?:^|/)\.env\.sample$''',
+    '''(?:^|/)\.env\.template$''',
+    # 本地与依赖（通常已在 .gitignore，扫描时仍建议排除）
+    '''(?i)(?:^|/)(?:\.?venv|virtualenv)(?:/|$)''',
+    '''(?:^|/)data(?:/|$)''',
+    '''(?:^|/)\.idea(?:/|$)''',
+]
+# 若某条误报是固定占位字符串，可追加 regexes，例如：
+# regexes = ['''(?i)fake[_-]?token|your[_-]?api[_-]?key[_-]?here''']
