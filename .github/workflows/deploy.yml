@@ -18,6 +18,7 @@ on:
     branches:
       - main
       - master
+  workflow_dispatch:
 
 concurrency:
   group: deploy-production
