@@ -1,5 +1,6 @@
 # ========== 密钥与本地环境（切勿提交）==========
 .env
+scripts/deploy-secrets.local.env
 .env.local
 .env.*.local
 !.env.example

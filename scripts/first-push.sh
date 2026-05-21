@@ -48,7 +48,15 @@ if git remote get-url origin >/dev/null 2>&1; then
 else
   git remote add origin "${GITHUB_REPO}"
 fi
-git push -u origin main
+if ! git push -u origin main; then
+  echo ""
+  echo "❌ 推送失败。常见原因："
+  echo "  • SSH: Permission denied (publickey) → 运行: bash scripts/setup-github-ssh.sh"
+  echo "  • 或改用 HTTPS + 个人令牌:"
+  echo "      git remote set-url origin https://github.com/用户名/仓库名.git"
+  echo "      git push -u origin main   # 用户名填 GitHub 名，密码填 PAT"
+  exit 1
+fi
 
 echo ""
 echo "✅ 已推送到 ${GITHUB_REPO}"

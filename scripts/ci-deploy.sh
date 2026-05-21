@@ -36,24 +36,8 @@ else
 fi
 
 echo ">>> [3/5] 选择部署方式"
-if command -v docker >/dev/null 2>&1; then
-  if docker compose version >/dev/null 2>&1; then
-    DC="docker compose"
-  elif command -v docker-compose >/dev/null 2>&1; then
-    DC="docker-compose"
-  else
-    DC=""
-  fi
-else
-  DC=""
-fi
-
-if [[ -n "${DC}" ]] && [[ -f docker-compose.yml ]]; then
-  echo ">>> [4/5] Docker Compose 部署"
-  ${DC} up -d --build --remove-orphans
-  echo ">>> [5/5] 容器状态"
-  ${DC} ps
-elif systemctl list-unit-files 2>/dev/null | grep -qE 'telegram-bot\.service'; then
+# 优先 systemd（当前 VPS 生产环境），避免无 Docker 时误走 compose
+if systemctl list-unit-files 2>/dev/null | grep -qE 'telegram-bot\.service'; then
   echo ">>> [4/5] systemd 部署（无 Docker 时使用）"
   test -d .venv || python3 -m venv .venv
   .venv/bin/pip install -q -r requirements.txt
@@ -62,9 +46,17 @@ elif systemctl list-unit-files 2>/dev/null | grep -qE 'telegram-bot\.service'; t
   echo ">>> [5/5] 服务状态"
   systemctl is-active telegram-bot telegram-web
   systemctl status telegram-bot telegram-web --no-pager | head -20
+elif command -v docker >/dev/null 2>&1 && [[ -f docker-compose.yml ]]; then
+  if docker compose version >/dev/null 2>&1; then DC="docker compose"
+  elif command -v docker-compose >/dev/null 2>&1; then DC="docker-compose"
+  else DC=""; fi
+  if [[ -n "${DC}" ]]; then
+    echo ">>> [4/5] Docker Compose 部署"
+    ${DC} up -d --build --remove-orphans
+    ${DC} ps
+  fi
 else
-  echo "ERROR: 未找到 Docker Compose 也未找到 telegram-bot.service"
-  echo "  请安装 Docker，或配置 systemd 单元后重试。"
+  echo "ERROR: 未找到 telegram-bot.service 也未找到 Docker"
   exit 1
 fi
 

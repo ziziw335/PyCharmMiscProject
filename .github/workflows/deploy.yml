@@ -42,6 +42,18 @@ jobs:
           check "${{ secrets.WEB_TOKEN }}" "WEB_TOKEN"
           echo "必填 Secrets 已配置"
 
+      - name: SSH 连通测试
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT != '' && secrets.SSH_PORT || '22' }}
+          script: |
+            echo "SSH OK from GitHub Actions"
+            uname -a
+            test -d /opt/bot && ls /opt/bot | head -5 || echo "no /opt/bot yet"
+
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.2.0
         env:
