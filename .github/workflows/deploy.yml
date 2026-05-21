@@ -83,9 +83,19 @@ jobs:
           script: |
             set -euxo pipefail
             export DEPLOY_PATH="${DEPLOY_PATH:-/opt/bot}"
+            REPO="https://github.com/ziziw335/PyCharmMiscProject.git"
             mkdir -p "${DEPLOY_PATH}"
             if [ ! -d "${DEPLOY_PATH}/.git" ]; then
-              git clone https://github.com/ziziw335/PyCharmMiscProject.git "${DEPLOY_PATH}"
+              if [ -n "$(ls -A "${DEPLOY_PATH}" 2>/dev/null || true)" ]; then
+                echo ">>> /opt/bot 已有文件，转为 git 仓库（保留 data/）"
+                cd "${DEPLOY_PATH}"
+                git init
+                git remote add origin "${REPO}" 2>/dev/null || git remote set-url origin "${REPO}"
+                git fetch origin main
+                git checkout -f -B main origin/main
+              else
+                git clone "${REPO}" "${DEPLOY_PATH}"
+              fi
             fi
             cd "${DEPLOY_PATH}"
             git fetch origin
